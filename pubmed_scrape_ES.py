@@ -10,7 +10,7 @@ from pymed import PubMed
 import pandas as pd
 
 def extract_pubmed_data(pubmed, search_term):
-    results = pubmed.query(search_term, max_results=60000)
+    results = pubmed.query(search_term, max_results=100)
     articleList = []
     articleInfo = []
 
@@ -33,6 +33,7 @@ def extract_pubmed_data(pubmed, search_term):
                 a_dict['firstname'] = a['firstname']
                 a_dict['initials'] = a['initials']
                 affiliation_split = (a['affiliation']).split(",")
+                print(a['affiliation'])
                 a_dict['country'] = (affiliation_split[-1].replace('.', '')).lower()
                 try:
                     a_dict['country'] = (((a_dict['country'].strip()).split(" "))[0]).strip()
@@ -72,9 +73,9 @@ def save_to_df(articleInfo):
 
 def scrape_pubmed():
     pubmed = PubMed(tool="PubMedSearcher", email="persianblue000@gmail.com")
-    search_term = '(((("nature*"[Journal]) OR ("science*"[Journal])) OR ("cell*"[Journal])) OR ("plos*"[Journal])) AND (("2019/01/01"[Date - Publication] : "2019/12/31"[Date - Publication]))'
+    search_term = '(((("nature*") OR ("science*")) OR ("cell*")) OR ("plos*")) AND (("2019/01/01"[Date - Publication] : "2019/12/31"[Date - Publication]))'
     search_term2 = '(((("nature*") OR ("science*")) OR ("cell*")) OR ("plos*")) AND (("2019/01/01"[Date - Publication] : "2019/12/31"[Date - Publication]))'
-    articleInfo = extract_pubmed_data(pubmed, search_term2)
+    articleInfo = extract_pubmed_data(pubmed, search_term)
     save_to_df(articleInfo) 
 
 def make_graph(path):
