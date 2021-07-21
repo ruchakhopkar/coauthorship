@@ -1,5 +1,6 @@
 import numpy as np
 import pandas as pd
+import re
 from Bio import Entrez
 
 def search(query, min_date, max_date, ret_start, ret_max):
@@ -45,7 +46,8 @@ def fetch_data(query, min_date, max_date, ret_start, ret_max):
             continue
         try:
             journal_name = paper['MedlineCitation']['Article']['Journal']['Title']
-            if (query not in journal_name.lower()):
+            journal_check = bool(re.match(query + "*", journal_name.lower()))
+            if journal_check == False:
                 continue
         except:
             continue
@@ -63,12 +65,13 @@ def fetch_data(query, min_date, max_date, ret_start, ret_max):
         author_info = []
         if ('AuthorList' in paper['MedlineCitation']['Article']):
             authors = paper['MedlineCitation']['Article']['AuthorList']
+            if len(authors) < 2:
+                continue
         else:
-            authors = []
+            continue
         for j in range(len(authors)):
             if (len(authors[j]['AffiliationInfo']) > 0):
                 affiliation = authors[j]['AffiliationInfo'][0]['Affiliation']
-                print(affiliation)
                 try:
                     city = (affiliation.split(",")[-2]).strip()
                     country = ((affiliation.split(",")[-1]).split(".")[0]).strip()
@@ -110,13 +113,26 @@ def paper_loop(query, min_date, max_date, est_max, ret_max):
             break
     return total_df
 
+def combine_df():
+    nature_df = pd.read_csv("2019_Nature_all.csv")
+    science_df = pd.read_csv("2019_Science_all.csv")
+    cell_df = pd.read_csv("2019_cell_all.csv")
+    plos_df = pd.read_csv("2019_plos_all.csv")
+    combined_df = pd.concat([nature_df, science_df, cell_df, plos_df])
+    combined_df.to_csv("2019_all.csv")
+    return combined_df
+
+def make_graph():
+    return
+
 if __name__ == '__main__':
-    query = "Nature*[journal] OR Science*[journal] OR Cell*[journal] OR PLOS*[journal]"
-    query1 = 'nature'
-    query2 = "Science[journal"
-    min_date = 2019
-    max_date = 2019
-    ret_start = 0
-    ret_max = 10000
-    nature_df = paper_loop(query1, min_date, max_date, 150000, ret_max)
-    nature_df.to_csv("2019_Nature_all.csv")
+    # query = "Nature*[journal] OR Science*[journal] OR Cell*[journal] OR PLOS*[journal]"
+    # query1 = 'plos'
+    # min_date = 2019
+    # max_date = 2019
+    # ret_start = 0
+    # ret_max = 10000
+    # science_df = paper_loop(query1, min_date, max_date, 3000000, ret_max)
+    # print(len(science_df))
+    # science_df.to_csv("2019_PLoS_all.csv")
+    combine_df()
