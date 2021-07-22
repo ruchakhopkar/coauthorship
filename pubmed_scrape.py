@@ -1,7 +1,9 @@
 import numpy as np
+import sys, getopt
 import pandas as pd
 import re
 from Bio import Entrez
+import scipy.sparse as sparse
 
 def search(query, min_date, max_date, ret_start, ret_max):
     Entrez.email = 'persianblue000@gmail.com'
@@ -113,26 +115,88 @@ def paper_loop(query, min_date, max_date, est_max, ret_max):
             break
     return total_df
 
-def combine_df():
-    nature_df = pd.read_csv("2019_Nature_all.csv")
-    science_df = pd.read_csv("2019_Science_all.csv")
-    cell_df = pd.read_csv("2019_cell_all.csv")
-    plos_df = pd.read_csv("2019_plos_all.csv")
-    combined_df = pd.concat([nature_df, science_df, cell_df, plos_df])
-    combined_df.to_csv("2019_all.csv")
+def combine_df(paths, dest_path):
+    combined_df = pd.concat(paths)
+    combined_df.to_csv(dest_path)
     return combined_df
 
-def make_graph():
-    return
+def make_graph(df, uw_path, w_path, authors_path):
+    authors_all = []
+    paper_authors = []
+    for i in range(len(df)):
+        authors = df['author'][i].split(",")
+        authors_all += authors
+        paper_authors.append(authors)
+    authors_set = set(authors_all)
+    authors_index = dict()
+    i = 0
+    for a in authors_set:
+        authors_index[a] = i
+        i += 1
+
+    authors_str = "\n".join(list(authors_set))
+    authors_str.encode(sys.getdefaultencoding(), errors = 'replace')
+    with open(authors_path, "wt", encoding = 'utf-8') as f:
+        f.write(authors_str)
+
+    net_w = sparse.lil_matrix((len(authors_set), len(authors_set)))
+    for i in range(len(paper_authors)):
+        for j in range(len(paper_authors[i])):
+            for k in range(j, len(paper_authors[i])):
+                x_ind = authors_index[paper_authors[i][j]]
+                y_ind = authors_index[paper_authors[i][k]]
+                net_w[x_ind, y_ind] += 1
+                net_w[y_ind, x_ind] += 1
+    
+    net_uw = net_w.copy()
+    net_uw[net_uw.nonzero()] = 1
+
+    print("All Authors: {}".format(len(authors_all)))
+    print("Num Nodes: {}".format(len(authors_set)))
+    print("Num Edges: {}".format(net_uw.count_nonzero()))
+
+
+    
+def search_pubmed(queries, min_date, max_date, ret_max, save_sep):
+    max_count = 3000000
+    journal_dfs = []
+    for query in queries:
+        journal_dfs.append(paper_loop(query, min_date, max_date, max_count, ret_max))
+    if save_sep:
+        for i in range(len(queries)):
+            filename = str(min_date) + "_" + queries[i] + ".csv"
+            journal_dfs[i].to_csv(filename)
+    return journal_dfs
+
+def main(search, save_sep, save_comb):
+    queries = ['nature', 'science', 'cell', 'plos']
+    min_date = 2019
+    max_date = 2019
+    ret_max = 10000
+    if search:
+        search_pubmed(queries, min_date, max_date, ret_max, save_sep)
+    journal_paths = []
+    for q in queries:
+        journal_paths.append(str(min_date) + "_" + q + ".csv")
+
+    if save_comb:
+        df_comb = combine_df(journal_paths, str(min_date) + "_all.csv")
+    else:
+        df_comb = pd.read_csv(str(min_date) + "_all.csv")
+    
+    make_graph(df_comb, str(min_date) + "_all_unweighted_network.csv", \
+                        str(min_date) + "_all_weighted_network.csv", \
+                        str(min_date) + "_authors.txt")
+
 
 if __name__ == '__main__':
-    # query = "Nature*[journal] OR Science*[journal] OR Cell*[journal] OR PLOS*[journal]"
-    # query1 = 'plos'
-    # min_date = 2019
-    # max_date = 2019
-    # ret_start = 0
-    # ret_max = 10000
-    # science_df = paper_loop(query1, min_date, max_date, 3000000, ret_max)
-    # print(len(science_df))
-    # science_df.to_csv("2019_PLoS_all.csv")
-    combine_df()
+    main(False, False, False)
+
+"""
+keywords: Nature, Cell, Science, PLoS
+year: 2019
+Num Nodes (authors): 140023
+Num Edges (connections): 2778551
+Num Authors: 150387
+Num Overlapping authors: 10364
+"""
