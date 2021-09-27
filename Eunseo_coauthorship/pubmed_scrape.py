@@ -131,14 +131,14 @@ def search_pubmed(queries, min_date, max_date, ret_max):
 
 def main(query_path, save_path):
     query_str = get_queries(query_path)
-    min_date = "2019/01/01"
-    max_date = "2019/12/31"
+    min_date = "2020/01/01"
+    max_date = "2020/12/31"
     ret_max = 10000
     journal_dfs = paper_loop(query_str, min_date, max_date, 60000, ret_max)
     journal_dfs.to_csv(save_path)
 
 if __name__ == '__main__':
-    main("final_journals_v2.txt", "2019_all_journal.csv")
+    main("final_journals_v2.txt", "2020_all_journal.csv")
     # get_queries("final_journals_v2.txt")
 
 

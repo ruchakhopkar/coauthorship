@@ -12,6 +12,21 @@ Filtering authors for network
     - Make author edge list
 '''
 
+
+# Make dictionary with all edges
+
+# Extract dictionary keys (all unique authors)
+
+# Store authors as class
+
+# Combine authors that are "equal"
+
+# Combine keys that are equal in dictionary
+
+# Store to dataframe
+
+
+
 class Author:
     def __init__(self, author_str):
         f_name, l_name, country, city = author_str.split(".")
