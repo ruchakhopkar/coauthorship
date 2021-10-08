@@ -30,8 +30,8 @@ def get_location(author_lst):
             aff_country_cities = aff_entity.country_cities
             country_keys = list(aff_country_cities.keys())
             
-            country = country_keys[0]
-            city = (aff_country_cities[country])[0]
+            country = "".join(filter(str.isalnum, country_keys[0]))
+            city = "".join(filter(str.isalnum, (aff_country_cities[country])[0]))
         except:
             country = "None"
             city = "None"
@@ -67,13 +67,14 @@ def parse_args(argv):
 
 def main(argv):
     file_index = parse_args(argv)
-    in_path = "split_journals/2019_journals_" + str(file_index) + ".csv"
-    out_path = "split_journals_clean/2019_journals_clean_" + str(file_index) + ".csv"
+    in_path = "2019_split_journals/2019_journals_" + str(file_index) + ".csv"
+    out_path = "2019_split_journals_clean/2019_journals_clean_" + str(file_index) + ".csv"
     print(in_path)
     print(out_path)
 
     print("read initial data")
     df = pd.read_csv(in_path, index_col = 0)
+    df = df.head(10)
     print("cleaning locations")
     start_time = time.time()
     clean_df_dict = clean_location(df)
